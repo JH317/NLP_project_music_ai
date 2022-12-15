@@ -21,7 +21,7 @@ python ./eval_xai_py
 ```
 
 # Auxiliary classifier
-We devised an auxiliary classifer to help MusicBert. It takes the annotation of each piece of performance as the input, and classifies the player ID of the performer. Same ```midi_label_map_apex_reg_cls.json``` file created from ```map_midi_to_label.py``` is used to extract the annotation data for each performance as input data, and the performer ID as the label. Various supervised classification methods (SVM, RandomForest, ...) were used. Codes for the data preprocessing and the auxiliary classifier is in ```Auxiliary_classifier.ipynb```
+We devised an auxiliary classifer to help MusicBert. It takes the annotation of each piece of performance as the input, and classifies the player ID of the performer. Same ```midi_label_map_apex_reg_cls.json``` file created from ```map_midi_to_label.py``` is used to extract the annotation data for each performance as input data, and the performer ID as the label. Various supervised classification methods (SVM, RandomForest, ...) were used. Codes for the data preprocessing and the auxiliary classifier is in ```./Auxiliary_classifier/Auxiliary_classifier.ipynb```
 
 # Changing the loss function
 We changed the loss function of the MusicBert to see if the change leads to better output, and if it fits better with the auxiliary classifiers. The changes were made in the ```./musicbert/__init__.py```. ```class LabelCrossEntropy, class LabelCrossEntropy_LSR, class OnlineLabelSmoothing, class Bootstrapping``` was implemented in the ```__init__.py``` file and the loss function in the ```class MusicBERTM2PCriterionForXAI``` was changed correspondingly.
