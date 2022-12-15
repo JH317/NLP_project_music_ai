@@ -64,6 +64,7 @@ print('crop_length =', crop_length)  # of compound tokens
 max_bars = 256
 max_instruments = 256
 
+
 #loss_fct =  OnlineLabelSmoothing(num_classes=13, device='cuda:0')
 class LabelCrossEntropy(nn.Module):
     def __init__(self):
@@ -101,7 +102,7 @@ class OnlineLabelSmoothing(nn.Module):
         self.K = num_classes
         self.device = device
         self.smooth = 0.1
-        self.alpha = 0.5
+        self.alpha = 0.6
         self.CE = LabelCrossEntropy()
         # S: soft label matrix; Initialize S0
         self.S = (torch.ones((self.K, self.K)) / self.K).to(device) # case 1: 1/K
@@ -175,9 +176,55 @@ class Bootstrapping(nn.Module):
             soft_loss = self.beta*crossentropy(outputs, targets) + (1-self.beta)*crossentropy(outputs,outputs_p)
             return soft_loss
 
+class SelfAdaptiveTraining(nn.Module):
+    def __init__(self, length, class_num, device, es = 500, alpha = 0.9):
+        super(SelfAdaptiveTraining, self).__init__()
+        self.es = es
+        self.alpha = alpha
+        self.device = device
+        self.soft_labels = torch.zeros(length,class_num).to(self.device)
+        self.update = 0
 
-#loss_fct =  OnlineLabelSmoothing(num_classes=13, device='cuda:0')
+    def forward(self, outputs, targets, index):
+    
+        #print(type(epoch))
+        #print("update:",self.update)
+        self.update += 1
+        #print(self.update)
+        if (self.update < self.es):
+            if self.update ==1:
+                self.soft_labels[index] = targets.clone().detach().to(self.device)
+                #print(self.soft_labels[index])
+            outputs_ls = F.log_softmax(outputs, dim=-1)
+            batch_size, _ = outputs_ls.shape
+            loss = -(outputs_ls * targets).sum() / batch_size
+            
+            '''
+          #  loss_github = F.cross_entropy(outputs, targets)
+            '''
+            return loss
+        else:
+        # moving average scheme
+            outputs_ls = F.log_softmax(outputs, dim=-1)
+            confidence = F.softmax(outputs.detach(), dim=-1)
+            #print(self.soft_labels[index])
+            #print(confidence)
+            self.soft_labels[index] = self.alpha * self.soft_labels[index] + (1 - self.alpha) * confidence
+        #sample reweighting scheme    
+            weight = torch.max(self.soft_labels[index], dim=-1)[0]
+            #print(self.soft_labels[index])
+            #print(weight)
+            weight_sum = weight.sum()
+            #batch_size, _ = outputs_ls.shape
+            loss = - (weight * ((outputs_ls * self.soft_labels[index]).sum(dim=-1))).sum() / weight_sum 
+            #print(self.soft_labels[index])
+            #print(loss)
 
+
+            return loss    
+loss_fct =  OnlineLabelSmoothing(num_classes=13, device='cuda:0')
+#count_OLS = 0
+#loss_fct = SelfAdaptiveTraining( length=719, class_num=13, device='cuda:0', es = 600, alpha = 0.9)
 # Thank GitHub user @neelansh for providing multi-label classification solution
 # See https://github.com/pytorch/fairseq/issues/2169
 @register_task("xai")
@@ -296,6 +343,9 @@ class MusicBERTSentencePredictionMultilabelTaskXAI(SentencePredictionTask):
 
 @register_criterion("M2P_xai")
 class MusicBERTM2PCriterionForXAI(SentencePredictionCriterion):
+    def __init__(self, task, classification_head_name, regression_target):
+        super().__init__(task, classification_head_name, regression_target)
+        self.count = 0
     def forward(self, model, sample, reduce=True):
         """Compute the loss for the given sample.
 
@@ -316,19 +366,30 @@ class MusicBERTM2PCriterionForXAI(SentencePredictionCriterion):
         )
         targets = model.get_targets(sample, [logits])
         #sample_size = targets.numel()
+        #print(sample['id'])
+        #print(targets)
+        #exit()
         sample_size = logits.size()[0]
         #print(targets)
         ###targets = targets[:,-1]
+        #Cross entropy
         #loss_fct = nn.CrossEntropyLoss(reduction='sum')
         #loss = loss_fct(F.softmax(logits,dim=-1), targets.float())
-        #loss_fct = LabelCrossEntropy_LSR()
-        #loss = loss_fct(F.softmax(logits,dim=-1), targets.float())
         
-        #loss_fct =  OnlineLabelSmoothing(self.num_classes, self.device)
+        #Online label smoothing
+        #loss_fct = LabelCrossEntropy_LSR()
         #loss = loss_fct(logits, targets.float())
-        #loss_fct.update()
-        loss_fct = Bootstrapping(beta=0.8,alpha=0) #soft bootstrapping
+        
+        #online label smoothing
+        #Define outside(line 225): loss_fct =  OnlineLabelSmoothing(self.num_classes, self.device)
         loss = loss_fct(logits, targets.float())
+        self.count +=1
+        if self.count %200 == 0:
+            loss_fct.update()
+
+        #bootstrapping alpha = 0 hard, alpha =1 soft
+        #loss_fct = Bootstrapping(beta=0.85,alpha=0) 
+        #loss = loss_fct(logits, targets.float(),sample['id'])
 
 
         #print(logits)

@@ -1,5 +1,5 @@
 export PYTHONPATH=`pwd`
-export CUDA_VISIBLE_DEVICES=1
+#export CUDA_VISIBLE_DEVICES=0
 #python eval_xai.py --task xai_M2PFnP --head_name xai_M2PFnP_res --checkpoint_file checkpoints/checkpoint_best_xai_apex_M2PFnP_base_1e-5.pt.pt  --data_dir xai_data_bin_apex_reg_cls/0
 
 #python eval_xai.py --task xai_M2PF --head_name xai_head --checkpoint_file checkpoints/checkpoint_best_xai_apex_M2PF_0.00001_base_adv.pt.pt --data_dir xai_data_bin_apex_reg_cls/0
@@ -39,5 +39,11 @@ export CUDA_VISIBLE_DEVICES=1
 
 #python eval_xai.py --task xai_M2PF --head_name xai_head --checkpoint_file checkpoints_8bars/checkpoint_best_xai_apex_M2PF_0.0001_base_8.pt.pt --data_dir processed/xai_data_bin_apex_reg_cls_8bars/0
 #python3 eval_xai.py --task xai_M2PF --head_name xai_head --checkpoint_file checkpoints/checkpoint_best_xai_apex_M2P_1e-5_base_tmp_10000.pt.pt --data_dir processed/xai_data_bin_apex_reg_cls/0
+#python3 eval_xai.py --task xai_M2PF --head_name xai_head --checkpoint_file checkpoints/checkpoint_best_xai_apex_M2P_1e-5_base_tmp_bootstrapping_hard.pt.pt --data_dir processed/xai_data_bin_apex_reg_cls/0
+#python3 eval_xai.py --task xai_M2PF --head_name xai_head --checkpoint_file checkpoints/checkpoint_best_xai_apex_M2P_1e-5_base_tmp_bootstrapping_soft.pt.pt --data_dir processed/xai_data_bin_apex_reg_cls/0
+python3 eval_xai.py --task xai_M2PF --head_name xai_head --checkpoint_file checkpoints/checkpoint_best_xai_apex_M2P_1e-5_base_tmp_OLS.pt.pt --data_dir processed/xai_data_bin_apex_reg_cls/0
+
 #python3 eval_xai.py --task xai_M2PF --head_name xai_head --checkpoint_file checkpoints/checkpoint_best_xai_apex_M2P_1e-5_base_tmp_uniform.pt.pt --data_dir processed/xai_data_bin_apex_reg_cls/0
-python3 eval_xai.py --task xai_M2P --head_name xai_head --checkpoint_file checkpoints/checkpoint_best_xai_apex_M2P_1e-5_base_tmp.pt.pt --data_dir processed/xai_data_bin_apex_reg_cls/0
+
+
+#python3 eval_xai.py --task xai_M2P --head_name xai_head --checkpoint_file checkpoints/checkpoint_best_xai_apex_M2P_1e-5_base_tmp.pt.pt --data_dir processed/xai_data_bin_apex_reg_cls/0

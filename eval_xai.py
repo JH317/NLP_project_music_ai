@@ -14,7 +14,7 @@ from processed.map_midi_to_label import LABEL_LIST
 import argparse
 
 max_length = 8192 if 'disable_cp' not in os.environ else 1024
-batch_size = 4
+batch_size = 1
 n_folds = 1
 #LABEL_TO_REMOVE = ["Regular beat change", "Subtle change", "Sophisticated(mellow)", "balanced", "Harmonious", "Dominant(forceful)", "Imaginative"]
 #LABEL_TO_REMOVE = ["Mechanical Tempo", "Intensional", "Regular beat change"]
@@ -98,11 +98,14 @@ for i in range(n_folds):
         source = np.vstack(tuple(padded(dataset[j]['source'].numpy()) for j in range(
             i, i + batch_size) if j < len(dataset)))
         source = torch.from_numpy(source)
+        #print(roberta.device)
+        #roberta.device = "cpu"
         if args.task == 'xai_M2PFnP':
-            features = roberta.extract_features(source.to(device=roberta.device))
+            features = roberta.extract_features(source)
             logits = roberta.model.regression_heads[args.head_name](features)
             output = torch.sigmoid(logits)
         else:
+            #print("HERE")
             features = roberta.extract_features(source.to(device=roberta.device))
             logits = roberta.model.classification_heads[args.head_name](features)
             ###output = torch.sigmoid(logits)
@@ -124,7 +127,7 @@ for i in range(n_folds):
     #     print(i, label_fn(i, label_dict))
     print(y_true.shape)
     print(y_pred.shape)
-    np.savetxt("MusicBert_pred.txt", y_pred)
+    np.savetxt("MusicBert_uniform_pred.txt", y_pred)
     np.savetxt("MusicBert_label.txt", y_true)
     #print(label_list)
     #print()
