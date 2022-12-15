@@ -44,3 +44,4 @@ logging_output = {
 }
 ...
  ```
+The checkpoint of MusicBert for each of the loss function modifications is in this [link](https://drive.google.com/drive/folders/1vED6xkJ5lOxrgP7PY8A_8B9R14Sy92ni)
